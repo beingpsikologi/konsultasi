@@ -1,0 +1,1 @@
+window.BEING_KONSULTASI_CONFIG={API_URL:"https://script.google.com/macros/s/AKfycbwHc34ZcYftGdeEYZEBTXmBWVr-9IrDmgSz8B17jIRDcBIjL8gxMIQPfvIUyOzpGuMyYg/exec"};
