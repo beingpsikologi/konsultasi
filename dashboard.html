@@ -1,1 +1,303 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pengajuan Saya | BEING</title><link rel="stylesheet" href="style.css"></head><body><header><nav class="nav"><div class="logo"><small>BEING BIRO PSIKOLOGI</small>PENGAJUAN SAYA</div><a href="index.html">+ Pengajuan Baru</a></nav></header><main class="container"><section class="hero"><div class="eyebrow">DASHBOARD KLIEN</div><h1>Pengajuan Saya</h1><p>Klien: <b id="clientName">-</b></p></section><div id="msg"></div><section id="history"></section></main><script src="config.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14634d">
+<title>Pengajuan Saya — Konsultasi BEING</title>
+<style>
+:root{--g:#14634d;--g2:#0f503e;--soft:#f3f8f5;--line:#d8e5df;--text:#17372d;--muted:#6d7c76;--danger:#a62e2e;--warn:#8a5a00}
+*{box-sizing:border-box}
+body{margin:0;background:#f7faf8;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.nav{max-width:1080px;margin:auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;text-decoration:none;color:var(--text);font-weight:800}
+.brand img{height:40px;width:auto}
+.nav a{color:var(--g);text-decoration:none;font-weight:800}
+.wrap{max-width:1080px;margin:32px auto 70px;padding:0 20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;margin-bottom:18px;box-shadow:0 6px 24px #12372b0b}
+.hero{background:linear-gradient(135deg,#fff,#f0f8f4)}
+.kicker{font-size:12px;letter-spacing:.14em;font-weight:900;color:var(--g)}
+h1{font-size:38px;line-height:1.1;margin:8px 0}
+h2{margin:0 0 10px;font-size:25px}
+h3{margin:0 0 8px}
+.muted{color:var(--muted);line-height:1.65}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.stat{background:var(--soft);border-radius:15px;padding:16px}
+.stat b{display:block;font-size:26px;color:var(--g)}
+.list{display:grid;gap:12px}
+.item{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff}
+.item-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.id{font-weight:900;color:var(--g)}
+.badge{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;background:#edf6f1;color:var(--g);white-space:nowrap}
+.badge.warn{background:#fff7e8;color:var(--warn)}
+.badge.danger{background:#fff0f0;color:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.row{padding:9px 0;border-bottom:1px solid #edf2ef}
+.row:last-child{border-bottom:0}
+.label{font-size:12px;color:var(--muted);font-weight:800}
+.value{font-weight:700;margin-top:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button,.btn{border:0;border-radius:11px;padding:11px 15px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
+.primary{background:var(--g);color:#fff}
+.secondary{background:#fff;color:var(--g);border:1px solid var(--g)}
+.paybox{margin-top:18px;padding:20px;border-radius:17px;background:var(--soft);border:1px solid var(--line)}
+.paybox .amount{font-size:28px;font-weight:900;color:var(--g)}
+input[type=file],textarea{width:100%;border:1px solid #cbd9d2;border-radius:11px;padding:12px;font:inherit;background:#fff;margin-top:8px}
+textarea{min-height:90px;resize:vertical}
+.notice{padding:13px 15px;border-radius:12px;margin:12px 0;line-height:1.55}
+.notice.ok{background:#edf8f2;color:#17613f}
+.notice.error{background:#fff0f0;color:var(--danger)}
+.empty,.loading{text-align:center;padding:40px;color:var(--muted)}
+.hidden{display:none}
+.services span{display:inline-block;background:#eef5f2;border-radius:8px;padding:7px 9px;margin:3px;font-size:13px}
+.small{font-size:13px}
+@media(max-width:700px){h1{font-size:32px}.stats,.grid{grid-template-columns:1fr}.item-head{display:block}.item-head .badge{margin-top:9px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-being.png" alt="BEING Psikologi">
+    </a>
+    <a href="index.html">Konsultasi</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card hero">
+    <div class="kicker">KONSULTASI BEING</div>
+    <h1>Pengajuan Saya</h1>
+    <p class="muted">Pantau pengajuan, pembayaran, jadwal, dan sesi konsultasi Anda dalam satu halaman.</p>
+    <div id="profile"></div>
+    <div class="stats">
+      <div class="stat"><span>Pengajuan</span><b id="countAll">-</b></div>
+      <div class="stat"><span>Menunggu pembayaran</span><b id="countPay">-</b></div>
+      <div class="stat"><span>Terjadwal</span><b id="countSchedule">-</b></div>
+    </div>
+  </section>
+
+  <div id="notice"></div>
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;gap:15px;align-items:center">
+      <div><h2>Daftar Konsultasi</h2><div class="muted small">Pilih salah satu pengajuan untuk melihat detail.</div></div>
+      <button class="secondary" id="refreshBtn">Refresh</button>
+    </div>
+    <div id="list" class="list" style="margin-top:16px"></div>
+  </section>
+
+  <section id="detailSection" class="card hidden">
+    <div id="detail"></div>
+  </section>
+</main>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwHc34ZcYftGdeEYZEBTXmBWVr-9IrDmgSz8B17jIRDcBIjL8gxMIQPfvIUyOzpGuMyYg/exec";
+const params = new URLSearchParams(location.search);
+
+const state = {
+  contactId: params.get("contactId") || "",
+  konsultasiId: params.get("konsultasiId") || "",
+  items: []
+};
+
+function esc(v){
+  return String(v ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+function rupiah(v){return "Rp "+Number(v||0).toLocaleString("id-ID");}
+function dateLabel(v){
+  if(!v)return "-";
+  const d=new Date(v);
+  if(isNaN(d))return esc(v);
+  return d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function statusBadge(s){
+  s=String(s||"-").toUpperCase();
+  let c="badge";
+  if(["MENUNGGU_PEMBAYARAN","MENUNGGU_VERIFIKASI","PENGAJUAN_BARU","MENUNGGU_PERSETUJUAN"].includes(s))c+=" warn";
+  if(["DITOLAK","DIBATALKAN"].includes(s))c+=" danger";
+  return `<span class="${c}">${esc(s)}</span>`;
+}
+function jsonp(action,payload={}){
+  return new Promise((resolve,reject)=>{
+    const cb="beingKonCb_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+    const s=document.createElement("script");
+    const q=new URLSearchParams({
+      action,
+      callback:cb,
+      payload:JSON.stringify(payload)
+    });
+    const timer=setTimeout(()=>{cleanup();reject(new Error("Server tidak merespons."));},20000);
+    function cleanup(){clearTimeout(timer);delete window[cb];s.remove();}
+    window[cb]=(data)=>{cleanup();resolve(data);};
+    s.onerror=()=>{cleanup();reject(new Error("Gagal menghubungi server konsultasi."));};
+    s.src=API+"?"+q.toString();
+    document.body.appendChild(s);
+  });
+}
+async function postForm(fields){
+  const body=new URLSearchParams(fields);
+  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
+  const text=await r.text();
+  try{return JSON.parse(text);}catch(_){throw new Error("Respons server pembayaran tidak valid.");}
+}
+function setNotice(msg,type="ok"){
+  document.getElementById("notice").innerHTML=msg?`<div class="notice ${type}">${esc(msg)}</div>`:"";
+}
+function getClient(){
+  try{
+    const x=JSON.parse(sessionStorage.getItem("being_consult_client")||"null");
+    if(x){
+      state.contactId ||= String(x.contactId||x.clientId||"");
+      document.getElementById("profile").innerHTML=
+        `<div class="muted small">Halo, <b>${esc(x.nama||"Klien")}</b> · ${esc(x.email||"")}</div>`;
+    }
+  }catch(_){}
+}
+function saveContext(){
+  if(state.contactId){
+    try{sessionStorage.setItem("being_consult_client",JSON.stringify({
+      contactId:state.contactId
+    }));}catch(_){}
+  }
+}
+function renderList(){
+  const el=document.getElementById("list");
+  if(!state.items.length){el.innerHTML='<div class="empty">Belum ada pengajuan konsultasi.</div>';return;}
+  el.innerHTML=state.items.map(x=>{
+    const services=String(x.layananNama||"-").split(" | ").filter(Boolean);
+    return `<article class="item">
+      <div class="item-head">
+        <div><div class="id">${esc(x.konsultasiId)}</div><div class="muted small">${dateLabel(x.tanggalPengajuan)}</div></div>
+        ${statusBadge(x.statusPengajuan)}
+      </div>
+      <div class="grid">
+        <div><div class="label">Layanan</div><div class="value">${esc(services.join(", "))}</div></div>
+        <div><div class="label">Metode</div><div class="value">${esc(x.method||"-")}</div></div>
+        <div><div class="label">Pembayaran</div><div class="value">${statusBadge(x.statusPembayaran)}</div></div>
+        <div><div class="label">Biaya</div><div class="value">${x.biaya?rupiah(x.biaya):"Menunggu penetapan"}</div></div>
+      </div>
+      <div class="actions"><button class="primary" onclick="openDetail('${esc(x.konsultasiId)}')">Lihat Detail</button></div>
+    </article>`;
+  }).join("");
+}
+function renderStats(){
+  document.getElementById("countAll").textContent=state.items.length;
+  document.getElementById("countPay").textContent=state.items.filter(x=>x.statusPembayaran==="MENUNGGU_PEMBAYARAN").length;
+  document.getElementById("countSchedule").textContent=state.items.filter(x=>x.statusPengajuan==="TERJADWAL").length;
+}
+async function load(){
+  setNotice("");
+  if(!state.contactId){
+    document.getElementById("list").innerHTML='<div class="empty">Link akses belum memiliki identitas klien. Silakan buka tautan dari email BEING.</div>';
+    return;
+  }
+  try{
+    const r=await jsonp("history",{contactId:state.contactId});
+    if(!r.ok)throw new Error(r.message||"Data tidak dapat dimuat.");
+    state.items=r.items||[];
+    renderList();renderStats();
+    if(state.konsultasiId)openDetail(state.konsultasiId);
+  }catch(e){setNotice(e.message||String(e),"error");}
+}
+async function openDetail(id){
+  state.konsultasiId=id;
+  document.getElementById("detailSection").classList.remove("hidden");
+  document.getElementById("detail").innerHTML='<div class="loading">Memuat detail...</div>';
+  try{
+    const r=await jsonp("detail",{contactId:state.contactId,konsultasiId:id});
+    if(!r.ok)throw new Error(r.message||"Detail tidak ditemukan.");
+    renderDetail(r.consultation||{});
+    history.replaceState(null,"",location.pathname+"?contactId="+encodeURIComponent(state.contactId)+"&konsultasiId="+encodeURIComponent(id));
+    document.getElementById("detailSection").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){document.getElementById("detail").innerHTML=`<div class="notice error">${esc(e.message||String(e))}</div>`;}
+}
+function renderDetail(c){
+  const services=(c.services||[]).map(x=>`<span>${esc(x.layananNama||x.nama||"")}</span>`).join("");
+  const payments=c.payments||[];
+  const p=payments[0]||null;
+  const canPay=p && ["MENUNGGU_PEMBAYARAN","DITOLAK"].includes(String(p.status||"").toUpperCase());
+  const payHtml=p?`
+    <div class="paybox">
+      <div class="kicker">PEMBAYARAN</div>
+      <div class="amount">${rupiah(p.amount||c.biaya)}</div>
+      <div class="grid">
+        <div><div class="label">Payment ID</div><div class="value">${esc(p.paymentId)}</div></div>
+        <div><div class="label">Status</div><div class="value">${statusBadge(p.status)}</div></div>
+      </div>
+      ${canPay?`
+        <div class="row"><div class="label">Bank TEST</div><div class="value">BANK BEING</div></div>
+        <div class="row"><div class="label">No. Rekening TEST</div><div class="value">0000000000</div></div>
+        <div class="row"><div class="label">Atas Nama TEST</div><div class="value">BEING BIRO PSIKOLOGI</div></div>
+        <p class="muted small">Detail rekening di atas masih data TEST dan wajib diganti sebelum production.</p>
+        <div class="field"><label><b>Bukti pembayaran</b></label><input id="proofFile" type="file" accept="image/*,.pdf"></div>
+        <div class="field"><label>Catatan (opsional)</label><textarea id="proofNote" placeholder="Catatan untuk admin BEING"></textarea></div>
+        <div class="actions"><button class="primary" id="sendProof">Kirim Bukti Pembayaran</button></div>
+        <div id="proofMsg"></div>
+      `:""}
+      ${p.proofUrl?`<p><a href="${esc(p.proofUrl)}" target="_blank" rel="noopener">Lihat bukti yang sudah dikirim</a></p>`:""}
+    </div>`:"";
+
+  const sessions=c.sessions||[];
+  const sessionHtml=sessions.length?sessions.map(s=>`
+    <div class="item">
+      <div class="item-head"><div><b>${esc(s.judul||"Sesi Konsultasi")}</b><div class="muted small">${dateLabel(s.tanggal)} · ${esc(s.jam||"-")}</div></div>${statusBadge(s.status)}</div>
+      ${s.psikologNama?`<p class="small">Psikolog: <b>${esc(s.psikologNama)}</b></p>`:""}
+      ${s.linkRuang?`<a class="btn primary" href="${esc(s.linkRuang)}" target="_blank" rel="noopener">Buka Ruang Konsultasi</a>`:""}
+    </div>`).join(""):'<div class="muted">Belum ada sesi terjadwal.</div>';
+
+  document.getElementById("detail").innerHTML=`
+    <div class="item-head">
+      <div><div class="kicker">DETAIL KONSULTASI</div><h2>${esc(c.konsultasiId||"-")}</h2></div>
+      ${statusBadge(c.statusPengajuan)}
+    </div>
+    <div class="grid">
+      <div><div class="label">Nama</div><div class="value">${esc(c.nama||"-")}</div></div>
+      <div><div class="label">Metode</div><div class="value">${esc(c.method||"-")}</div></div>
+      <div><div class="label">Status Pembayaran</div><div class="value">${statusBadge(c.statusPembayaran)}</div></div>
+      <div><div class="label">Biaya</div><div class="value">${c.biaya?rupiah(c.biaya):"Menunggu penetapan"}</div></div>
+    </div>
+    <div style="margin-top:16px"><div class="label">LAYANAN</div><div class="services" style="margin-top:6px">${services||"-"}</div></div>
+    ${c.psikologNama?`<div class="row" style="margin-top:14px"><div class="label">PSIKOLOG</div><div class="value">${esc(c.psikologNama)}</div></div>`:""}
+    ${payHtml}
+    <div style="margin-top:24px"><div class="kicker">JADWAL & SESI</div><h3>Perjalanan konsultasi</h3>${sessionHtml}</div>
+  `;
+  if(canPay)document.getElementById("sendProof").onclick=submitProof;
+}
+async function submitProof(){
+  const file=document.getElementById("proofFile")?.files?.[0];
+  const msg=document.getElementById("proofMsg");
+  if(!file){msg.innerHTML='<div class="notice error">Pilih bukti pembayaran terlebih dahulu.</div>';return;}
+  if(file.size>2*1024*1024){msg.innerHTML='<div class="notice error">Ukuran bukti maksimal 2 MB.</div>';return;}
+  const btn=document.getElementById("sendProof");btn.disabled=true;btn.textContent="Mengirim...";
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    try{
+      const r=await postForm({
+        action:"payment.proof",
+        contactId:state.contactId,
+        konsultasiId:state.konsultasiId,
+        fileName:file.name,
+        mimeType:file.type,
+        fileData:reader.result,
+        catatan:document.getElementById("proofNote")?.value||""
+      });
+      if(!r.ok)throw new Error(r.message||"Bukti pembayaran gagal dikirim.");
+      msg.innerHTML='<div class="notice ok">'+esc(r.message||"Bukti pembayaran berhasil dikirim.")+'</div>';
+      await openDetail(state.konsultasiId); await load();
+    }catch(e){
+      msg.innerHTML='<div class="notice error">'+esc(e.message||String(e))+'</div>';
+      btn.disabled=false;btn.textContent="Kirim Bukti Pembayaran";
+    }
+  };
+  reader.readAsDataURL(file);
+}
+document.getElementById("refreshBtn").onclick=load;
+getClient();
+load();
+</script>
+</body>
+</html>
