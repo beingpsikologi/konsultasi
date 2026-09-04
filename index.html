@@ -18,10 +18,127 @@ function renderServices(){$('services').innerHTML=SERVICES.map(s=>`<label class=
 function selected(){return [...document.querySelectorAll('input[name=service]:checked')].map(x=>SERVICES.find(s=>s[0]===x.value)).filter(Boolean)}
 function method(){return document.querySelector('input[name=method]:checked')?.value||''}
 function summary(){$('summary').innerHTML=`<div class="summary-row"><strong>Klien</strong><span>${esc($('nama').value||'-')}</span></div><div class="summary-row"><strong>Email</strong><span>${esc($('email').value||'-')}</span></div><div class="summary-row"><strong>Layanan</strong><span>${selected().length?selected().map(s=>esc(s[1])).join('<br>'):'Belum dipilih'}</span></div><div class="summary-row"><strong>Metode</strong><span>${method()==='PRIVATE'?'Privat':method()==='KELOMPOK'?'Kelompok':'Belum dipilih'}</span></div>`}
-async function post(action,payload){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,payload})});return r.json()}
-$('registerBtn').onclick=async()=>{let n=$('nama').value.trim(),e=$('email').value.trim(),w=$('wa').value.trim(),i=$('instansi').value.trim();$('clientMessage').innerHTML='';if(!n||!e||!w)return $('clientMessage').innerHTML='<div class="alert error">Nama, email, dan WhatsApp wajib diisi.</div>';if(!$('consent').checked)return $('clientMessage').innerHTML='<div class="alert error">Persetujuan layanan dan privasi wajib dicentang.</div>';let b=$('registerBtn');b.disabled=true;b.textContent='Mendaftarkan...';try{let j=await post('client.register',{nama:n,email:e,wa:w,instansi:i});if(!j.ok)throw Error(j.message||'Pendaftaran gagal');clientId=j.client.clientId;sessionStorage.setItem('being_consult_client',JSON.stringify(j.client));$('clientMessage').innerHTML='<div class="alert ok"><strong>Pendaftaran klien berhasil.</strong> Silakan pilih layanan dan metode konsultasi.</div>';$('selectionStep').classList.remove('hidden');renderServices();summary();$('selectionStep').scrollIntoView({behavior:'smooth'})}catch(x){$('clientMessage').innerHTML='<div class="alert error">'+esc(x.message)+'</div>';b.disabled=false;b.textContent='Lanjut ke Pilihan Layanan'}};
+async function post(action,payload){
+  const r=await fetch(API,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action,payload})
+  });
+  const text=await r.text();
+  let j;
+  try{j=JSON.parse(text)}
+  catch(_){throw new Error('Respons server tidak valid. Silakan coba lagi.')}
+  return j;
+}
+let registrationSubmitting=false;
+$('registerBtn').onclick=async()=>{
+ if(registrationSubmitting) return;
+ registrationSubmitting=true;
+ let n=$('nama').value.trim(),e=$('email').value.trim(),w=$('wa').value.trim(),i=$('instansi').value.trim();$('clientMessage').innerHTML='';if(!n||!e||!w){registrationSubmitting=false;return $('clientMessage').innerHTML='<div class="alert error">Nama, email, dan WhatsApp wajib diisi.</div>';}if(!$('consent').checked){registrationSubmitting=false;return $('clientMessage').innerHTML='<div class="alert error">Persetujuan layanan dan privasi wajib dicentang.</div>';}let b=$('registerBtn');b.disabled=true;b.textContent='Mendaftarkan...';try{let j=await post('client.register',{nama:n,email:e,wa:w,instansi:i});if(!j.ok)throw Error(j.message||'Pendaftaran gagal');clientId=j.client.clientId;sessionStorage.setItem('being_consult_client',JSON.stringify(j.client));$('clientMessage').innerHTML='<div class="alert ok"><strong>Pendaftaran klien berhasil.</strong> Silakan pilih layanan dan metode konsultasi.</div>';$('selectionStep').classList.remove('hidden');renderServices();summary();$('selectionStep').scrollIntoView({behavior:'smooth'})}catch(x){registrationSubmitting=false;$('clientMessage').innerHTML='<div class="alert error">'+esc(x.message)+'</div>';b.disabled=false;b.textContent='Lanjut ke Pilihan Layanan'}};
 document.querySelectorAll('input[name=method]').forEach(x=>x.onchange=()=>{document.querySelectorAll('.method').forEach(m=>m.classList.remove('active'));x.closest('.method').classList.add('active');$('groupCountWrap').classList.toggle('hidden',x.value!=='KELOMPOK');summary()});
 $('jumlahPeserta').oninput=summary;$('catatan').oninput=summary;
 $('backBtn').onclick=()=>{$('selectionStep').classList.add('hidden');$('clientStep').scrollIntoView({behavior:'smooth'})};
-$('consultForm').onsubmit=async ev=>{ev.preventDefault();$('submitMessage').innerHTML='';let ss=selected(),m=method(),p=m==='KELOMPOK'?Number($('jumlahPeserta').value):1;if(!clientId)return $('submitMessage').innerHTML='<div class="alert error">Pendaftaran klien belum selesai.</div>';if(!ss.length)return $('submitMessage').innerHTML='<div class="alert error">Pilih minimal satu layanan.</div>';if(!m)return $('submitMessage').innerHTML='<div class="alert error">Pilih metode konsultasi.</div>';if(m==='KELOMPOK'&&(p<2||p>9))return $('submitMessage').innerHTML='<div class="alert error">Jumlah peserta kelompok harus 2–9 orang.</div>';let b=$('submitBtn');b.disabled=true;b.textContent='Mengirim...';try{let j=await post('consultation.submit',{clientId,serviceIds:ss.map(s=>s[0]),method:m,jumlahPeserta:p,catatan:$('catatan').value.trim()});if(!j.ok)throw Error(j.message||'Pengajuan gagal');sessionStorage.setItem('being_last_consultation',JSON.stringify(j));$('submitMessage').innerHTML='<div class="alert ok"><strong>Pengajuan berhasil dikirim.</strong><br>ID Pengajuan: <b>'+esc(j.konsultasiId)+'</b><br>Silakan menunggu pemeriksaan admin BEING. Pembayaran belum dilakukan pada tahap ini.</div>';b.textContent='Pengajuan Terkirim'}catch(x){$('submitMessage').innerHTML='<div class="alert error">'+esc(x.message)+'</div>';b.disabled=false;b.textContent='Kirim Pengajuan Konsultasi'}};
+// ============================================================
+ // SUBMIT KONSULTASI — ANTI DOUBLE SUBMIT
+ // ============================================================
+ let consultationSubmitting=false;
+ let consultationRequestId='';
+
+ function makeRequestId(){
+   if(window.crypto && typeof window.crypto.randomUUID==='function'){
+     return window.crypto.randomUUID();
+   }
+   return 'REQ-'+Date.now()+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+ }
+
+ $('consultForm').addEventListener('submit',async ev=>{
+   ev.preventDefault();
+
+   if(consultationSubmitting) return;
+   consultationSubmitting=true;
+
+   const b=$('submitBtn');
+   const form=$('consultForm');
+   $('submitMessage').innerHTML='';
+
+   const ss=selected();
+   const m=method();
+   const p=m==='KELOMPOK'?Number($('jumlahPeserta').value):1;
+
+   if(!clientId){
+     consultationSubmitting=false;
+     $('submitMessage').innerHTML='<div class="alert error">Pendaftaran klien belum selesai.</div>';
+     return;
+   }
+   if(!ss.length){
+     consultationSubmitting=false;
+     $('submitMessage').innerHTML='<div class="alert error">Pilih minimal satu layanan.</div>';
+     return;
+   }
+   if(!m){
+     consultationSubmitting=false;
+     $('submitMessage').innerHTML='<div class="alert error">Pilih metode konsultasi.</div>';
+     return;
+   }
+   if(m==='KELOMPOK'&&(p<2||p>9)){
+     consultationSubmitting=false;
+     $('submitMessage').innerHTML='<div class="alert error">Jumlah peserta kelompok harus 2–9 orang.</div>';
+     return;
+   }
+
+   // Request ID dibuat sekali untuk satu proses submit.
+   // Backend dapat memakainya sebagai idempotency key.
+   if(!consultationRequestId) consultationRequestId=makeRequestId();
+
+   // Kunci tombol + field SEBELUM request dikirim.
+   b.disabled=true;
+   b.textContent='Mengirim...';
+   form.querySelectorAll('input,textarea,button').forEach(el=>{
+     if(el!==b) el.disabled=true;
+   });
+
+   const payload={
+     requestId:consultationRequestId,
+     idempotencyKey:consultationRequestId,
+     clientId:clientId,
+     serviceIds:ss.map(s=>s[0]),
+     serviceNames:ss.map(s=>s[1]),
+     services:ss.map(s=>({id:s[0],name:s[1]})),
+     method:m,
+     jumlahPeserta:p,
+     catatan:$('catatan').value.trim()
+   };
+
+   try{
+     const j=await post('consultation.submit',payload);
+
+     if(!j.ok) throw new Error(j.message||'Pengajuan gagal');
+
+     sessionStorage.setItem('being_last_consultation',JSON.stringify(j));
+
+     $('submitMessage').innerHTML=
+       '<div class="alert ok">'+
+       '<strong>Pengajuan berhasil dikirim.</strong><br>'+
+       'ID Pengajuan: <b>'+esc(j.konsultasiId||'-')+'</b><br>'+
+       'Silakan menunggu pemeriksaan admin BEING. Pembayaran belum dilakukan pada tahap ini.'+
+       '</div>';
+
+     // Tetap terkunci setelah berhasil.
+     b.textContent='Pengajuan Terkirim';
+
+   }catch(x){
+     // Hanya buka kembali jika request gagal.
+     consultationSubmitting=false;
+     form.querySelectorAll('input,textarea,button').forEach(el=>{
+       if(el!==b) el.disabled=false;
+     });
+     b.disabled=false;
+     b.textContent='Kirim Pengajuan Konsultasi';
+
+     $('submitMessage').innerHTML=
+       '<div class="alert error">'+
+       esc(x.message||'Pengajuan gagal dikirim.')+
+       '</div>';
+   }
+ });
 </script></body></html>
