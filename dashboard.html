@@ -79,7 +79,8 @@ const params = new URLSearchParams(location.search);
 const state = {
   contactId: params.get("contactId") || "",
   konsultasiId: params.get("konsultasiId") || "",
-  items: []
+  items: [],
+  paymentId: ""
 };
 
 function esc(v){
@@ -99,7 +100,7 @@ function dateLabel(v){
 function statusBadge(s){
   s=String(s||"-").toUpperCase();
   let c="badge";
-  if(["PENGAJUAN_BARU","MENUNGGU_PERSETUJUAN","MENUNGGU_PEMBAYARAN","MENUNGGU_VERIFIKASI","BELUM_DIAJUKAN"].includes(s))c+=" warn";
+  if(["PENGAJUAN BARU","PENGAJUAN_BARU","MENUNGGU_PERSETUJUAN","MENUNGGU_PEMBAYARAN","MENUNGGU_VERIFIKASI","BELUM_DIAJUKAN"].includes(s))c+=" warn";
   if(["DITOLAK","DIBATALKAN"].includes(s))c+=" danger";
   if(["LUNAS","TERJADWAL","SELESAI"].includes(s))c+=" ok";
   return `<span class="${c}">${esc(s)}</span>`;
@@ -113,7 +114,7 @@ function statusBadge(s){
 async function apiPost(action,payload={}){
   const res=await fetch(API,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify({action,payload})
   });
   const text=await res.text();
@@ -142,7 +143,7 @@ function renderList(){
     return;
   }
   el.innerHTML=state.items.map(x=>{
-    const services=String(x.layananNama||"-").split(" | ").filter(Boolean);
+    const services=(Array.isArray(x.layananList)?x.layananList.map(s=>s.nama||s.layananNama||s.name||"").filter(Boolean):String(x.layananNama||"-").split(" | ").filter(Boolean));
     const id=String(x.konsultasiId||"");
     return `<article class="item">
       <div class="item-head">
@@ -151,7 +152,7 @@ function renderList(){
       </div>
       <div class="grid">
         <div><div class="label">Layanan</div><div class="value">${esc(services.join(", "))}</div></div>
-        <div><div class="label">Metode</div><div class="value">${esc(x.method||"-")}</div></div>
+        <div><div class="label">Metode</div><div class="value">${esc(x.metode||x.method||"-")}</div></div>
         <div><div class="label">Pembayaran</div><div class="value">${statusBadge(x.statusPembayaran)}</div></div>
         <div><div class="label">Biaya</div><div class="value">${x.biaya?rupiah(x.biaya):"Menunggu penetapan"}</div></div>
       </div>
@@ -180,6 +181,7 @@ async function load(){
     const r=await apiPost("public.consultation.history",{contactId:state.contactId});
     if(!r.ok)throw new Error(r.message||"Riwayat tidak dapat dimuat.");
     state.items=Array.isArray(r.items)?r.items:[];
+    renderProfile(r.profile||{});
     renderList();renderStats();
     if(state.konsultasiId)await openDetail(state.konsultasiId,false);
   }catch(e){
@@ -207,9 +209,9 @@ async function openDetail(id,scroll=true){
 }
 
 function renderDetail(c){
-  const services=(c.services||[]).map(x=>`<span>${esc(x.layananNama||x.nama||"")}</span>`).join("");
-  const payments=c.payments||[];
-  const p=payments[0]||null;
+  const services=(c.services||[]).map(x=>`<span>${esc(x.layananNama||x.nama||x.name||"")}</span>`).join("");
+  const p=c.payment||null;
+  state.paymentId=p?String(p.paymentId||""):"";
   const sessions=c.sessions||[];
   const canPay=p && ["MENUNGGU_PEMBAYARAN","DITOLAK"].includes(String(p.status||"").toUpperCase());
 
@@ -245,7 +247,7 @@ function renderDetail(c){
   const sessionHtml=sessions.length?sessions.map(s=>`
     <div class="item">
       <div class="item-head">
-        <div><b>${esc(s.judul||"Sesi Konsultasi")}</b>
+        <div><b>${esc(s.judul||("Pertemuan ke-"+(s.pertemuanKe||"-"))||"Sesi Konsultasi")}</b>
         <div class="muted small">${dateLabel(s.tanggal||s.tanggalSesi)} · ${esc(s.jam||s.jamSesi||"-")}</div></div>
         ${statusBadge(s.status)}
       </div>
@@ -292,10 +294,10 @@ async function submitProof(){
     const r=await apiPost("public.consultation.paymentProof",{
       contactId:state.contactId,
       konsultasiId:state.konsultasiId,
-      paymentId:(document.querySelector(".paybox .value")?.textContent||"").trim(),
+      paymentId:state.paymentId||"",
       fileName:file.name,
       mimeType:file.type,
-      fileData:data,
+      base64Data:data,
       catatan:document.getElementById("proofNote")?.value||""
     });
     if(!r.ok)throw new Error(r.message||"Bukti pembayaran gagal dikirim.");
