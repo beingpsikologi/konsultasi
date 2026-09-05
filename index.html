@@ -116,11 +116,16 @@ $('backBtn').onclick=()=>{$('selectionStep').classList.add('hidden');$('clientSt
 
      sessionStorage.setItem('being_last_consultation',JSON.stringify(j));
 
+     const dashUrl = j.dashboardUrl ||
+       'dashboard.html?contactId='+encodeURIComponent(j.contactId||clientId)+
+       '&konsultasiId='+encodeURIComponent(j.konsultasiId||'');
+
      $('submitMessage').innerHTML=
        '<div class="alert ok">'+
        '<strong>Pengajuan berhasil dikirim.</strong><br>'+
        'ID Pengajuan: <b>'+esc(j.konsultasiId||'-')+'</b><br>'+
        'Silakan menunggu pemeriksaan admin BEING. Pembayaran belum dilakukan pada tahap ini.'+
+       '<div class="actions"><a class="btn primary" href="'+esc(dashUrl)+'">Buka Pengajuan Saya</a></div>'+
        '</div>';
 
      // Tetap terkunci setelah berhasil.
