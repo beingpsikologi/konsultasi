@@ -100,7 +100,16 @@ $('backBtn').onclick=()=>{$('selectionStep').classList.add('hidden');$('clientSt
    const payload={
      requestId:consultationRequestId,
      idempotencyKey:consultationRequestId,
+
+     // Identitas selalu berasal dari field FORM yang sedang aktif.
+     // Email/WA dipakai backend untuk menemukan KlienID yang sama.
+     // Nama pengajuan tetap memakai nama yang diketik saat submit.
      clientId:clientId,
+     nama:$('nama').value.trim(),
+     email:$('email').value.trim(),
+     wa:$('wa').value.trim(),
+     instansi:$('instansi').value.trim(),
+
      serviceIds:ss.map(s=>s[0]),
      serviceNames:ss.map(s=>s[1]),
      services:ss.map(s=>({id:s[0],name:s[1]})),
