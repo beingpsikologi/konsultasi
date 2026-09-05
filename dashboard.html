@@ -9,9 +9,9 @@
 :root{--g:#124f42;--g2:#1c6656;--soft:#f2f8f5;--line:#dbe7e1;--text:#17332b;--muted:#6b7e77;--danger:#a62e2e}
 *{box-sizing:border-box}body{margin:0;background:#f7faf8;color:var(--text);font:15px/1.55 Arial,sans-serif}
 header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.nav{max-width:1050px;margin:auto;padding:14px 18px;display:flex;align-items:center;gap:18px}
-.nav a{color:var(--g);text-decoration:none;font-weight:800}.brand{margin-right:auto;display:flex;align-items:center;gap:10px}
-.brand img{width:38px;height:38px;object-fit:contain}.wrap{max-width:1050px;margin:28px auto;padding:0 18px}
+.nav{max-width:1050px;margin:auto;padding:12px 18px;display:flex;align-items:center;gap:18px}
+.nav a{color:var(--g);text-decoration:none;font-weight:800}.brand{margin-left:auto;display:flex;align-items:center;justify-content:flex-end}
+.brand img{width:112px;height:50px;object-fit:contain;object-position:right center}.wrap{max-width:1050px;margin:28px auto;padding:0 18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 5px 18px rgba(18,79,66,.05)}
 .hero{background:linear-gradient(135deg,#124f42,#1d6757);color:#fff;border:0}.hero .muted{color:#d9eee7}
 .kicker{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
@@ -51,8 +51,10 @@ textarea{min-height:80px;resize:vertical}.row{padding:9px 0;border-bottom:1px so
 </head>
 <body>
 <header><div class="nav">
-<a class="brand" href="index.html"><img src="assets/logo-being.png" alt="BEING"><span>BEING Konsultasi</span></a>
 <a href="index.html">Konsultasi</a>
+<a class="brand" href="https://beingpsikologi.com/" aria-label="BEING Biro Psikologi">
+  <img src="https://beingpsikologi.com/assets/being-logo.png" alt="BEING Biro Psikologi">
+</a>
 </div></header>
 
 <main class="wrap">
@@ -186,7 +188,7 @@ async function load(){
      * Sama pola POST JSON dengan registrasi:
      * {action:"public.consultation.history",payload:{contactId}}
      */
-    const r=await apiPost("public.consultation.history",{contactId:state.contactId});
+    const r=await apiPost("consultation.history",{contactId:state.contactId});
     if(!r.ok)throw new Error(r.message||"Riwayat tidak dapat dimuat.");
     state.items=Array.isArray(r.items)?r.items:[];
     renderProfile(r.profile||{});
@@ -202,7 +204,7 @@ async function openDetail(id,scroll=true){
   document.getElementById("detailSection").classList.remove("hidden");
   document.getElementById("detail").innerHTML='<div class="loading">Memuat detail...</div>';
   try{
-    const r=await apiPost("public.consultation.detail",{
+    const r=await apiPost("consultation.detail",{
       contactId:state.contactId,konsultasiId:id
     });
     if(!r.ok)throw new Error(r.message||"Detail tidak ditemukan.");
@@ -217,8 +219,11 @@ async function openDetail(id,scroll=true){
 }
 
 function renderDetail(c){
-  const services=(c.services||[]).map(x=>`<span>${esc(x.layananNama||x.nama||x.name||"")}</span>`).join("");
-  const p=c.payment||null;
+  const services=(
+    Array.isArray(c.services)?c.services:
+    Array.isArray(c.layananList)?c.layananList:[]
+  ).map(x=>`<span>${esc(x.layananNama||x.nama||x.name||"")}</span>`).join("");
+  const p=c.payment || (Array.isArray(c.payments)?c.payments[0]:null) || null;
   state.paymentId=p?String(p.paymentId||""):"";
   const sessions=c.sessions||[];
   const methodValue=c.metode||c.method||c.tipeLayanan||"";
@@ -324,7 +329,7 @@ async function submitProof(){
       reader.readAsDataURL(file);
     });
 
-    const r=await apiPost("public.consultation.paymentProof",{
+    const r=await apiPost("consultation.paymentproof",{
       contactId:state.contactId,
       konsultasiId:state.konsultasiId,
       paymentId:state.paymentId||"",
